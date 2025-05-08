@@ -1,0 +1,3 @@
+I'm ready to write some Python code!
+
+What would you like me to write? A simple program, a script, or something more complex?

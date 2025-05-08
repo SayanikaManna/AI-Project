@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Speech Recognition</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <button id="start" onclick="startRecognition()">Start Recognition</button>
+    <button id="stop" onclick="stopRecognition()">Stop Recognition</button>
+    <p id="output"></p>
+    <script>
+        const output = document.getElementById('output');
+        let recognition = null;
+        let silenceTimer = null;
+        
+        function startRecognition() {
+            try {
+                if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+                    output.textContent = "ERROR: Speech recognition not supported";
+                    return;
+                }
+                
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en';  // Will be replaced by Python
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                
+                recognition.onresult = function(event) {
+                    // Reset silence timer when we get speech
+                    clearTimeout(silenceTimer);
+                    
+                    const transcript = event.results[event.results.length - 1][0].transcript;
+                    output.textContent = transcript;
+                    
+                    // Set a timer to detect silence (2 seconds)
+                    silenceTimer = setTimeout(() => {
+                        if (recognition) {
+                            recognition.stop();
+                        }
+                    }, 2000);
+                };
+
+                recognition.onend = function() {
+                    console.log("Recognition ended");
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error("Speech recognition error:", event.error);
+                };
+                
+                recognition.start();
+            } catch (e) {
+                output.textContent = "ERROR: " + e.message;
+            }
+        }
+
+        function stopRecognition() {
+            clearTimeout(silenceTimer);
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch (e) {
+                    console.error("Error stopping recognition:", e);
+                }
+                recognition = null;
+            }
+        }
+        
+        // Auto-start when page loads
+        window.addEventListener('load', function() {
+            setTimeout(startRecognition, 500);
+        });
+    </script>
+</body>
+</html>
